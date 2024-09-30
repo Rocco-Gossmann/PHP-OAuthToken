@@ -4,12 +4,15 @@ namespace rogoss\OAuth;
 
 require_once __DIR__ . "/TokenException.php";
 
-class TokenBase
-{
+class TokenBase {
     // Token Fields
     //==========================================================================
     /** @property string  Idealy the User-Agent, that the Token was created for */
     protected string $sAgent = "";
+
+    //==========================================================================
+    /** @property string  the SHA256 Representation of the Tokens Agent */
+    protected string $sAgentToken = "";
 
     /** @property string  Additional content, that can for example describe the areas, this token is valid in */
     protected string $sContent = "";
@@ -32,17 +35,48 @@ class TokenBase
         $this->sSecret = $sSignaturSecret;
     }
 
+    private function toUnsignedArray() : array {
+        $aTokenContent = [];
+        $sTokenMode = "";
+
+
+        if (!empty($this->sAgentToken)) {
+            $aTokenContent["a"] = $this->sAgentToken;
+            $sTokenMode .= "a";
+        }
+
+        if ($this->iTTL > 0) {
+            $aTokenContent["ttl"] = $this->iTTL;
+            $sTokenMode .= "t";
+        }
+
+        if (!empty($this->sContent)) {
+            $aTokenContent["c"] = $this->sContent;
+            $sTokenMode .= 'c';
+        }
+        $aTokenContent['m'] = $sTokenMode;
+
+        return $aTokenContent;
+    }
+
+    protected function getSignature() : string {
+        return $this->signArray($this->toUnsignedArray());
+    }
+
+    protected function hashAgent($sAgent): string {
+        return hash("sha256", $sAgent);
+    }
+
     /**
      * @param array $aToken  - an array containing all Values, for a given token
      * @return string
      */
-    private function getSignature(array $aToken): string
-    {
+    private function signArray(array &$aToken): string {
         $sSignaturContent =
             ($aToken['a'] ?? '')
+            . ($aToken['m'] ?? '')
             . ($aToken['ttl'] ?? '')
-            . ($aToken['c'] ?? '')
-            . ($aToken['m'] ?? '');
+            . ($aToken['c'] ?? '');
 
         if (empty($this->sSecret))
             return hash("sha256", $sSignaturContent);
@@ -71,12 +105,14 @@ class TokenBase
 
         $iMagicNr = floor($iFoundSum / $iFoundSum);
 
-        return hash(
+        $aToken['s'] = hash(
             "sha256",
             substr($this->sSecret, 0, $iMagicNr)
                 . $sSignaturContent
                 . substr($this->sSecret, $iMagicNr - 1)
         );
+
+        return $aToken['s'];
     }
 
 
@@ -88,29 +124,10 @@ class TokenBase
      */
     public function toString($bBase64 = false): string
     {
-        $aTokenContent = [];
-        $sTokenMode = "";
+        $aToken = $this->toUnsignedArray();
+        $this->signArray($aToken);
 
-
-        if (!empty($this->sAgent)) {
-            $aTokenContent["a"] = hash("sha256", $this->sAgent);
-            $sTokenMode .= "a";
-        }
-
-        if ($this->iTTL > 0) {
-            $aTokenContent["ttl"] = $this->iTTL;
-            $sTokenMode .= "t";
-        }
-
-        if (!empty($this->sContent)) {
-            $aTokenContent["c"] = $this->sContent;
-            $sTokenMode .= 'c';
-        }
-        $aTokenContent['m'] = $sTokenMode;
-        $aTokenContent['s'] = $this->getSignature($aTokenContent);
-
-        $sOutput = json_encode($aTokenContent);
-
+        $sOutput = json_encode($aToken);
         return $bBase64 ? base64_encode($sOutput) : $sOutput;
     }
 
