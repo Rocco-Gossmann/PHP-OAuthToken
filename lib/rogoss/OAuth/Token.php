@@ -1,8 +1,9 @@
 <?php namespace rogoss\OAuth;
 
 require_once __DIR__ . "/TokenBase.php";
+require_once __DIR__ . "/iTokenUser.php";
 
-class Token extends TokenBase {
+class Token extends TokenBase  implements iTokenUser{
 
     /** @ignore */
     public function validateString(string $sField, $mValue) : string {
@@ -30,15 +31,15 @@ class Token extends TokenBase {
         return intval($mValue);
     }
 
-    public static function blank() : static {
+    public static function blank() : iTokenUser {
         return new static(); 
     }
 
-    public static function withSecret(string $sSecret) : static {
+    public static function withSecret(string $sSecret) : iTokenUser {
         return new static($sSecret); 
     }
 
-    public function parseToken(string $sValue, bool $bBase64 = false) {
+    public function parseToken(string $sValue, bool $bBase64 = false) : iTokenUser {
 
         if($bBase64)
             $sValue = base64_decode($sValue);
@@ -105,14 +106,13 @@ class Token extends TokenBase {
         if(count($aJSON) > 0)
             throw new TokenException("token fields do not match with given mode (".implode(", ", array_keys($aJSON)). ")", TokenException::INVALID_TOKEN_STRUCT);
 
-        if(strcmp($sSignature, $this->getSignature())) {
+        if(strcmp($sSignature, $this->getSignature())) 
             throw new TokenException("token signature missmatch", TokenException::INVALID_TOKEN_STRUCT);
-        }
 
         return $this;
     }
 
-    public function requiresAgent($sAgent): Token {
+    public function requiresAgent($sAgent): iTokenUser {
 
         if(strcmp($this->hashAgent($sAgent), $this->sAgentToken))
             throw new TokenException("token agent missmatch", TokenException::AGENT_MISSMATCH);
@@ -120,7 +120,7 @@ class Token extends TokenBase {
         return $this;
     }
 
-    public function requiresNoneExpired(): Token {
+    public function requiresNoneExpired(): iTokenUser {
         
         if($this->iTTL > 0 and (time() - $this->iTTL) >= 0)
             throw new TokenException("token expired", TokenException::TOKEN_EXPIRED);
