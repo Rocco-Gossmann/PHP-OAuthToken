@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-require_once __DIR__ . "/lib/rogoss/OAuth/OAuth.php";
+require_once __DIR__ . "/OAuth/OAuth.php";
 
 use \PHPUnit\Framework\TestCase;
 use \rogoss\OAuth\TokenException;

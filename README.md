@@ -6,14 +6,14 @@ The Tokens are signed via a `sha256 - Hash` and and User-Provideable Salt / Secr
 
 ## How to use it?
 
-1. Download the contents of the `lib/rogoss/OAuth` folder into your project.
+1. Download the contents of the `OAuth` folder into your project.
    You can use the download of the Release - Section or just clone this Repo.
 
 2. load the `rogoss\OAuth` class into your project
 
 ```php
 <?php
-    require_once __DIR__ . "/lib/rogoss/OAuth/OAuth.php";
+    require_once __DIR__ . "/path/to/OAuth/OAuth.php";
 
     $oOAuth = \rogoss\OAuth\OAuth::withSecret(MYSECRET_PROVIDED_FROM_SOMEWHERE_ELSE);
 
@@ -33,7 +33,7 @@ In order for someone to Authenticate with a Token, you must first generate one.
 
 ```php
 <?php
-    require_once __DIR__ . "/lib/rogoss/OAuth/OAuth.php";
+    require_once __DIR__ . "/path/to/OAuth/OAuth.php";
 
     use \rogoss\OAuth\OAuth;
 
