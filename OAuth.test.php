@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-require_once __DIR__ . "/OAuth/OAuth.php";
+require_once __DIR__ . "/OAuth.php";
 
 use \PHPUnit\Framework\TestCase;
 use \rogoss\OAuth\TokenException;
@@ -166,7 +166,7 @@ class TestOAuth extends TestCase
         $this->expectException('\rogoss\OAuth\TokenException');
         $this->expectExceptionCode(TokenException::INVALID_TOKEN_STRUCT);
 
-        OAuth::withSecret(self::SECRET)->LoadToken($sToken, false); 
+        OAuth::withSecret(self::SECRET)->LoadToken($sToken, false);
     }
 
     private function _tokenModeManipTest_2($sTokenField, $mValue)
